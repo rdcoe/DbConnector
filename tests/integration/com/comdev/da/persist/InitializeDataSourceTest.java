@@ -38,10 +38,10 @@ public class InitializeDataSourceTest
 
         DbConnectionFactory instance = DbConnectionFactory.instance( DbType.H2 );
         instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
-        if( ! instance.isDbInitialized() ) {
+        if( !instance.isDbInitialized() ) {
             instance.initializeDatabase();
         }
-        
+
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
@@ -71,7 +71,7 @@ public class InitializeDataSourceTest
             DbUtils.closeQuietly( conn, stmt, rs );
             DbConnectionFactory.instance( DbType.H2 ).close();
         }
-        
+
         Assert.assertTrue( "Schema not created.", schemaExists );
     }
 
@@ -84,7 +84,7 @@ public class InitializeDataSourceTest
 
         DbConnectionFactory instance = DbConnectionFactory.instance( DbType.PGSQL );
         instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
-        if( ! instance.isDbInitialized() ) {
+        if( !instance.isDbInitialized() ) {
             instance.initializeDatabase();
         }
 
@@ -117,7 +117,7 @@ public class InitializeDataSourceTest
             DbUtils.closeQuietly( conn, stmt, rs );
             DbConnectionFactory.instance( DbType.PGSQL ).close();
         }
-        
+
         Assert.assertTrue( "Schema not created.", schemaExists );
     }
 }
