@@ -8,6 +8,7 @@
     <property name="lib.dir" value="lib" />
     <property name="dist.dir" value="dist" />
     <property name="dist.jar" value="dbconnector.jar" />
+    <property name="stub.tests.dir" value="tests/stubs" />
     <property name="junit.output.dir" value="${build.dir}/junit" />
     <property name="instrumented.dir"
               value="${junit.output.dir}/instrumented" />
@@ -152,6 +153,7 @@
                debug="true"
                debuglevel="${debuglevel}"
                includeantruntime="false">
+            <src path=":${stub.tests.dir}" />
             <classpath refid="common.classpath" />
             <classpath refid="testing.classpath" />
         </javac>
