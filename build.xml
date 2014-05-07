@@ -43,8 +43,8 @@
     </path>
 
     <path id="testing.classpath">
-        <pathelement location="${src.dir}" />
         <pathelement location="${build.dir}" />
+        <pathelement location="${stub.tests.dir}" />
         <pathelement location="${junit.output.dir}" />
         <pathelement location="${lib.dir}/logging/slf4j-nop-1.6.6.jar" />
         <pathelement location="${lib.dir}/junit/junit-4.10.jar" />
@@ -142,11 +142,12 @@
         </copy>
     </target>
 
-    <target name="compile.tests" depends="init">
+    <target name="compile.tests" depends="compile">
         <mkdir dir="${junit.output.dir}" />
 
-        <javac srcdir="${src.dir}"
-               includes="**/*Test.java"
+        <javac sourcepath=""
+               srcdir="${src.dir}"
+               includes="**/*Test*.java"
                destdir="${junit.output.dir}"
                source="${source_ver}"
                target="${target_ver}"
