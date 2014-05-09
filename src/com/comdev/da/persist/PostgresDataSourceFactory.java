@@ -34,7 +34,7 @@ public class PostgresDataSourceFactory extends AbstractDataSourceFactory
         this.port = ( port <= 0 ? DEFAULT_PORT : port );
         this.user = ( user == null ? DEFAULT_USER : user );
         this.passwd = ( passwd == null ? DEFAULT_PASSWD : passwd );
-        
+
         init();
     }
 
@@ -47,7 +47,7 @@ public class PostgresDataSourceFactory extends AbstractDataSourceFactory
     {
         this( DEFAULT_HOST, DEFAULT_PORT, dbName, schema, null, null );
     }
-    
+
     @Override
     protected void init()
     {
@@ -55,11 +55,7 @@ public class PostgresDataSourceFactory extends AbstractDataSourceFactory
             return;
 
         PoolProperties p = new PoolProperties();
-        p.setUrl( "jdbc:postgresql://" + host +
-                  ":" +
-                  port +
-                  "/" +
-                  getDbName() );
+        p.setUrl( "jdbc:postgresql://" + host + ":" + port + "/" + getDbName() );
         p.setDriverClassName( "org.postgresql.Driver" );
         p.setUsername( user );
         p.setPassword( passwd );
@@ -78,7 +74,8 @@ public class PostgresDataSourceFactory extends AbstractDataSourceFactory
         p.setMinIdle( 10 );
         p.setLogAbandoned( true );
         p.setRemoveAbandoned( true );
-        p.setJdbcInterceptors( "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;" + "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer" );
+        p.setJdbcInterceptors( "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"
+                               + "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer" );
         p.setDefaultAutoCommit( true );
 
         ds = new DataSource();
@@ -104,7 +101,8 @@ public class PostgresDataSourceFactory extends AbstractDataSourceFactory
     @Override
     public String testIsDbInitializedSQL()
     {
-        return "SELECT tables.table_name " + "FROM information_schema.tables " +
+        return "SELECT tables.table_name " +
+               "FROM information_schema.tables " +
                "WHERE tables.table_schema='" +
                getSchemaName().toLowerCase() +
                "'";
