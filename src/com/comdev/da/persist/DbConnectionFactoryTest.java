@@ -1,11 +1,14 @@
 package com.comdev.da.persist;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Hashtable;
-import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -196,10 +199,10 @@ public class DbConnectionFactoryTest
 
         PowerMock.expectPrivate( mockFactory,
                                  "loadSchema",
-                                 EasyMock.anyObject( String.class ),
+                                 EasyMock.anyObject( InputStream.class ),
                                  EasyMock.anyObject( String.class ) )
                  .andReturn( new StringBuilder() )
-                 .times( 4 );
+                 .times( 1 );
 
         EasyMock.expect( mockFactory.isDbInitialized() ).andReturn( true );
 
@@ -214,7 +217,7 @@ public class DbConnectionFactoryTest
 
         Whitebox.setInternalState( instance, DbType.class, dbType );
         Whitebox.setInternalState( instance, SQLFactory.class, mockSqlFactory );
-        instance.initializeDatabase();
+        instance.executeSQL( new BufferedInputStream( null ) );
 
         PowerMock.verifyAll();
     }
@@ -235,25 +238,41 @@ public class DbConnectionFactoryTest
         instance = DbConnectionFactory.instance( dbType );
         instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
 
+        FileInputStream fis = new FileInputStream( new File( "tests/integration/schema_init.sql" ) );
+
         Whitebox.setInternalState( instance, DbType.class, dbType );
-        StringBuilder actual = Whitebox.invokeMethod( instance,
-                                                      "loadSchema",
-                                                      dbType.toString()
-                                                              + "_init.sql",
-                                                      SCHEMA_NAME );
-
-        Set<Field> fields = Whitebox.getAllStaticFields( DbConnectionFactory.class );
-        for( Field f : fields ) {
-            if( "DB_SCHEMA_SQL".equals( f.getName() ) ) {
-                actual.append( Whitebox.invokeMethod( instance,
-                                                      "loadSchema",
-                                                      f.get( instance ),
-                                                      SCHEMA_NAME ) );
-                break;
-            }
-        }
-
+        StringBuilder actual = Whitebox.invokeMethod( instance, "loadSchema", fis, SCHEMA_NAME );
+        
         PowerMock.verifyAll();
+        
+        String expected = "CREATE TABLE testSchema.resource_ref(\n"
+                + "    uid SERIAL PRIMARY KEY,\n"
+                + "    path VARCHAR(512) NOT NULL,\n"
+                + "    filename VARCHAR(255) NOT NULL,\n"
+                + "    createdTime TIMESTAMP NOT NULL,\n"
+                + "    lastAccessed TIMESTAMP NOT NULL,\n"
+                + "    lastModified TIMESTAMP NOT NULL,\n"
+                + "    size BIGINT NOT NULL,\n"
+                + "    fileKey INTEGER NOT NULL,\n"
+                + "    visible BOOLEAN DEFAULT true NOT NULL\n"
+                + ");\n"
+                + "\n"
+                + "CREATE TABLE testSchema.lookup(\n"
+                + "    uid SERIAL PRIMARY KEY,\n"
+                + "    lookupKey VARCHAR(255) NOT NULL,\n"
+                + "    resourceId BIGINT NOT NULL REFERENCES testSchema.resource_ref(uid) ON DELETE CASCADE,\n"
+                + "    createdTime TIMESTAMP NOT NULL,\n"
+                + "    updatedTime TIMESTAMP\n"
+                + ");\n"
+                + "\n"
+                + "CREATE TABLE testSchema.acl_entry(\n"
+                + "    uid SERIAL PRIMARY KEY,\n"
+                + "    resourceId BIGINT NOT NULL REFERENCES testSchema.resource_ref(uid) ON DELETE CASCADE,\n"
+                + "    principalName VARCHAR(255) NOT NULL,\n"
+                + "    lastModified TIMESTAMP NOT NULL\n"
+                + ");\n";
+        
+        Assert.assertEquals( "Schema does not match.", expected, actual.toString() );
     }
 
     @Test

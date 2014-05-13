@@ -1,5 +1,7 @@
 package com.comdev.da.persist;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -14,6 +16,9 @@ import com.comdev.da.persist.DbConnectionFactory.DbType;
 
 public class InitializeDataSourceTest
 {
+    private static final File SCHEMA_FILE = new File( "tests/integration/schema_init.sql" );
+    private static final File PGSQL_INIT_SCHEMA_FILE = new File( "tests/integration/pgsql_init.sql" );
+    private static final File H2_INIT_SCHEMA_FILE = new File( "tests/integration/h2_init.sql" );
     private static final String DB_NAME = "testDb";
     private static final String SCHEMA_NAME = "testSchema";
     private String dbuser = "";
@@ -39,7 +44,10 @@ public class InitializeDataSourceTest
         DbConnectionFactory instance = DbConnectionFactory.instance( DbType.H2 );
         instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
         if( !instance.isDbInitialized() ) {
-            instance.initializeDatabase();
+            FileInputStream fis = new FileInputStream( H2_INIT_SCHEMA_FILE );
+            instance.executeSQL( fis );
+            fis = new FileInputStream( SCHEMA_FILE );
+            instance.executeSQL( fis );
         }
 
         Connection conn = null;
@@ -68,6 +76,7 @@ public class InitializeDataSourceTest
                 }
             }
         } finally {
+            stmt.execute( "DROP SCHEMA " + SCHEMA_NAME );
             DbUtils.closeQuietly( conn, stmt, rs );
             DbConnectionFactory.instance( DbType.H2 ).close();
         }
@@ -85,7 +94,10 @@ public class InitializeDataSourceTest
         DbConnectionFactory instance = DbConnectionFactory.instance( DbType.PGSQL );
         instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
         if( !instance.isDbInitialized() ) {
-            instance.initializeDatabase();
+            FileInputStream fis = new FileInputStream( PGSQL_INIT_SCHEMA_FILE );
+            instance.executeSQL( fis );
+            fis = new FileInputStream( SCHEMA_FILE );
+            instance.executeSQL( fis );
         }
 
         Connection conn = null;
@@ -114,6 +126,7 @@ public class InitializeDataSourceTest
                 }
             }
         } finally {
+            stmt.execute( "DROP SCHEMA " + SCHEMA_NAME + " CASCADE" );
             DbUtils.closeQuietly( conn, stmt, rs );
             DbConnectionFactory.instance( DbType.PGSQL ).close();
         }

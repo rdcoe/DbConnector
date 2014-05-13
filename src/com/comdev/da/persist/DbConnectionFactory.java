@@ -24,8 +24,6 @@ import com.comdev.da.auth.Identity;
 public class DbConnectionFactory
 {
     private static final Logger logger = LoggerFactory.getLogger( DbConnectionFactory.class );
-    private static final String DB_SCHEMA_SQL = "schema_init.sql";
-    private static final String DB_INDICES_SQL = "indices_common.sql";
     public static final DbType DEFAULT_DBTYPE = DbType.H2;
 
     private static Hashtable<DbType, DbConnectionFactory> instanceTable = new Hashtable<DbConnectionFactory.DbType, DbConnectionFactory>();
@@ -110,9 +108,7 @@ public class DbConnectionFactory
             throw new DbConnectionFactoryException( e );
         }
 
-        logger.info( "Using datasource URL: "
-                     + factory.getUrl()
-                     + "." );
+        logger.info( "Using datasource URL: " + factory.getUrl() + "." );
 
         factory.setSessionState();
     }
@@ -151,19 +147,15 @@ public class DbConnectionFactory
         return initialized;
     }
 
-    public boolean initializeDatabase()
+    public boolean executeSQL( final InputStream sqlFileStream )
         throws DbConnectionFactoryException
     {
         if( factory == null ) {
             throw new DbConnectionFactoryException( "Database failed to initialize." );
         }
 
-        StringBuilder sql = loadSchema( dbType.toString()
-                                        + "_init.sql", schema );
-        sql.append( loadSchema( DB_SCHEMA_SQL, schema ) );
-        sql.append( loadSchema( DB_INDICES_SQL, schema ) );
-        sql.append( loadSchema( dbType.toString()
-                                + "_indices.sql", schema ) );
+        StringBuilder sql = loadSchema( sqlFileStream, schema );
+
         boolean initialized = false;
 
         Connection conn = null;
@@ -246,17 +238,16 @@ public class DbConnectionFactory
         return factory.getDataSource();
     }
 
-    private StringBuilder loadSchema( String schema_file, String schema )
+    private StringBuilder loadSchema( final InputStream sqlFileStream, String schemaName )
         throws DbConnectionFactoryException
     {
         StringBuilder sql = new StringBuilder();
 
-        InputStream is = getClass().getResourceAsStream( schema_file );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader( sqlFileStream ) );
         String line;
         try {
             while( ( line = br.readLine() ) != null ) {
-                sql.append( line.replaceAll( "\\{schema_name\\}", schema ) ).append( "\n" );
+                sql.append( line.replaceAll( "\\{schema_name\\}", schemaName ) ).append( "\n" );
             }
         } catch( IOException e ) {
             throw new DbConnectionFactoryException( "Failed to load schema initialization file.", e );
@@ -295,8 +286,7 @@ public class DbConnectionFactory
 
         factory.close();
 
-        logger.info( dbType
-                     + " database successfully closed." );
+        logger.info( dbType + " database successfully closed." );
     }
 
     public boolean isReady()
