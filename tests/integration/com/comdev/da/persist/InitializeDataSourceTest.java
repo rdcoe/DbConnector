@@ -18,7 +18,9 @@ public class InitializeDataSourceTest
 {
     private static final File SCHEMA_FILE = new File( "tests/integration/schema_init.sql" );
     private static final File PGSQL_INIT_SCHEMA_FILE = new File( "tests/integration/pgsql_init.sql" );
+    private static final File PGSQL_SCHEMA__INDEX_FILE = new File( "tests/integration/pgsql_indices.sql" );
     private static final File H2_INIT_SCHEMA_FILE = new File( "tests/integration/h2_init.sql" );
+    private static final File H2_SCHEMA__INDEX_FILE = new File( "tests/integration/h2_indices.sql" );
     private static final String DB_NAME = "testDb";
     private static final String SCHEMA_NAME = "testSchema";
     private String dbuser = "";
@@ -47,6 +49,8 @@ public class InitializeDataSourceTest
             FileInputStream fis = new FileInputStream( H2_INIT_SCHEMA_FILE );
             instance.executeSQL( fis );
             fis = new FileInputStream( SCHEMA_FILE );
+            instance.executeSQL( fis );
+            fis = new FileInputStream( H2_SCHEMA__INDEX_FILE );
             instance.executeSQL( fis );
         }
 
@@ -97,6 +101,8 @@ public class InitializeDataSourceTest
             FileInputStream fis = new FileInputStream( PGSQL_INIT_SCHEMA_FILE );
             instance.executeSQL( fis );
             fis = new FileInputStream( SCHEMA_FILE );
+            instance.executeSQL( fis );
+            fis = new FileInputStream( PGSQL_SCHEMA__INDEX_FILE );
             instance.executeSQL( fis );
         }
 
