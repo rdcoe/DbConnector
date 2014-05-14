@@ -44,6 +44,7 @@
 
     <path id="testing.classpath">
         <pathelement location="${build.dir}" />
+        <pathelement location="${integration.tests.dir}" />
         <pathelement location="${stub.tests.dir}" />
         <pathelement location="${junit.output.dir}" />
         <pathelement location="${lib.dir}/logging/slf4j-nop-1.6.6.jar" />
