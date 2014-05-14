@@ -1,8 +1,6 @@
 package com.comdev.da.persist;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -232,46 +230,48 @@ public class DbConnectionFactoryTest
                  .andReturn( mockFactory );
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
 
+        SQLFactory mockSQLFactory = EasyMock.createMock( SQLFactory.class );
+        Whitebox.setInternalState( mockFactory, SQLFactory.class, mockSQLFactory );
+
         PowerMock.replayAll();
 
         DbType dbType = DbType.H2;
         instance = DbConnectionFactory.instance( dbType );
         instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
 
-        FileInputStream fis = new FileInputStream( new File( "tests/integration/schema_init.sql" ) );
-
+        InputStream fis = ClassLoader.getSystemResourceAsStream( "schema_init.sql" );
         Whitebox.setInternalState( instance, DbType.class, dbType );
         StringBuilder actual = Whitebox.invokeMethod( instance, "loadSchema", fis, SCHEMA_NAME );
-        
+
         PowerMock.verifyAll();
-        
+
         String expected = "CREATE TABLE testSchema.resource_ref(\n"
-                + "    uid SERIAL PRIMARY KEY,\n"
-                + "    path VARCHAR(512) NOT NULL,\n"
-                + "    filename VARCHAR(255) NOT NULL,\n"
-                + "    createdTime TIMESTAMP NOT NULL,\n"
-                + "    lastAccessed TIMESTAMP NOT NULL,\n"
-                + "    lastModified TIMESTAMP NOT NULL,\n"
-                + "    size BIGINT NOT NULL,\n"
-                + "    fileKey INTEGER NOT NULL,\n"
-                + "    visible BOOLEAN DEFAULT true NOT NULL\n"
-                + ");\n"
-                + "\n"
-                + "CREATE TABLE testSchema.lookup(\n"
-                + "    uid SERIAL PRIMARY KEY,\n"
-                + "    lookupKey VARCHAR(255) NOT NULL,\n"
-                + "    resourceId BIGINT NOT NULL REFERENCES testSchema.resource_ref(uid) ON DELETE CASCADE,\n"
-                + "    createdTime TIMESTAMP NOT NULL,\n"
-                + "    updatedTime TIMESTAMP\n"
-                + ");\n"
-                + "\n"
-                + "CREATE TABLE testSchema.acl_entry(\n"
-                + "    uid SERIAL PRIMARY KEY,\n"
-                + "    resourceId BIGINT NOT NULL REFERENCES testSchema.resource_ref(uid) ON DELETE CASCADE,\n"
-                + "    principalName VARCHAR(255) NOT NULL,\n"
-                + "    lastModified TIMESTAMP NOT NULL\n"
-                + ");\n";
-        
+                          + "    uid SERIAL PRIMARY KEY,\n"
+                          + "    path VARCHAR(512) NOT NULL,\n"
+                          + "    filename VARCHAR(255) NOT NULL,\n"
+                          + "    createdTime TIMESTAMP NOT NULL,\n"
+                          + "    lastAccessed TIMESTAMP NOT NULL,\n"
+                          + "    lastModified TIMESTAMP NOT NULL,\n"
+                          + "    size BIGINT NOT NULL,\n"
+                          + "    fileKey INTEGER NOT NULL,\n"
+                          + "    visible BOOLEAN DEFAULT true NOT NULL\n"
+                          + ");\n"
+                          + "\n"
+                          + "CREATE TABLE testSchema.lookup(\n"
+                          + "    uid SERIAL PRIMARY KEY,\n"
+                          + "    lookupKey VARCHAR(255) NOT NULL,\n"
+                          + "    resourceId BIGINT NOT NULL REFERENCES testSchema.resource_ref(uid) ON DELETE CASCADE,\n"
+                          + "    createdTime TIMESTAMP NOT NULL,\n"
+                          + "    updatedTime TIMESTAMP\n"
+                          + ");\n"
+                          + "\n"
+                          + "CREATE TABLE testSchema.acl_entry(\n"
+                          + "    uid SERIAL PRIMARY KEY,\n"
+                          + "    resourceId BIGINT NOT NULL REFERENCES testSchema.resource_ref(uid) ON DELETE CASCADE,\n"
+                          + "    principalName VARCHAR(255) NOT NULL,\n"
+                          + "    lastModified TIMESTAMP NOT NULL\n"
+                          + ");\n";
+
         Assert.assertEquals( "Schema does not match.", expected, actual.toString() );
     }
 
