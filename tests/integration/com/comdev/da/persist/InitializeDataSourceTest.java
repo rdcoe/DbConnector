@@ -1,7 +1,6 @@
 package com.comdev.da.persist;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -16,11 +15,11 @@ import com.comdev.da.persist.DbConnectionFactory.DbType;
 
 public class InitializeDataSourceTest
 {
-    private static final File SCHEMA_FILE = new File( "tests/integration/schema_init.sql" );
-    private static final File PGSQL_INIT_SCHEMA_FILE = new File( "tests/integration/pgsql_init.sql" );
-    private static final File PGSQL_SCHEMA__INDEX_FILE = new File( "tests/integration/pgsql_indices.sql" );
-    private static final File H2_INIT_SCHEMA_FILE = new File( "tests/integration/h2_init.sql" );
-    private static final File H2_SCHEMA__INDEX_FILE = new File( "tests/integration/h2_indices.sql" );
+    private static final String SCHEMA_FILE = "schema_init.sql";
+    private static final String PGSQL_INIT_SCHEMA_FILE = "pgsql_init.sql";
+    private static final String PGSQL_SCHEMA__INDEX_FILE = "pgsql_indices.sql";
+    private static final String H2_INIT_SCHEMA_FILE = "h2_init.sql";
+    private static final String H2_SCHEMA__INDEX_FILE = "h2_indices.sql";
     private static final String DB_NAME = "testDb";
     private static final String SCHEMA_NAME = "testSchema";
     private String dbuser = "";
@@ -46,11 +45,11 @@ public class InitializeDataSourceTest
         DbConnectionFactory instance = DbConnectionFactory.instance( DbType.H2 );
         instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
         if( !instance.isDbInitialized() ) {
-            FileInputStream fis = new FileInputStream( H2_INIT_SCHEMA_FILE );
+            InputStream fis = ClassLoader.getSystemResourceAsStream( H2_INIT_SCHEMA_FILE );
             instance.executeSQL( fis );
-            fis = new FileInputStream( SCHEMA_FILE );
+            fis = ClassLoader.getSystemResourceAsStream( SCHEMA_FILE );
             instance.executeSQL( fis );
-            fis = new FileInputStream( H2_SCHEMA__INDEX_FILE );
+            fis = ClassLoader.getSystemResourceAsStream( H2_SCHEMA__INDEX_FILE );
             instance.executeSQL( fis );
         }
 
@@ -98,11 +97,11 @@ public class InitializeDataSourceTest
         DbConnectionFactory instance = DbConnectionFactory.instance( DbType.PGSQL );
         instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
         if( !instance.isDbInitialized() ) {
-            FileInputStream fis = new FileInputStream( PGSQL_INIT_SCHEMA_FILE );
+            InputStream fis = ClassLoader.getSystemResourceAsStream( PGSQL_INIT_SCHEMA_FILE );
             instance.executeSQL( fis );
-            fis = new FileInputStream( SCHEMA_FILE );
+            fis = ClassLoader.getSystemResourceAsStream( SCHEMA_FILE );
             instance.executeSQL( fis );
-            fis = new FileInputStream( PGSQL_SCHEMA__INDEX_FILE );
+            fis = ClassLoader.getSystemResourceAsStream( PGSQL_SCHEMA__INDEX_FILE );
             instance.executeSQL( fis );
         }
 
