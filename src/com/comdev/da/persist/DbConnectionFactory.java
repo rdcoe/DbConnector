@@ -122,15 +122,14 @@ public class DbConnectionFactory
 
         StringBuilder sql = loadSchema( sqlFileStream, schema );
 
-        boolean initialized = false;
+        boolean success = false;
 
         Connection conn = null;
         Statement stmt = null;
         try {
             conn = getConnection();
             stmt = conn.createStatement();
-            stmt.execute( sql.toString() );
-            initialized = isDbInitialized();
+            success = stmt.execute( sql.toString() );
         } catch( SQLException e ) {
             logger.error( e.getMessage(), e );
             throw new DbConnectionFactoryException( e );
@@ -138,7 +137,7 @@ public class DbConnectionFactory
             DbUtils.closeQuietly( conn, stmt, null );
         }
 
-        return initialized;
+        return success;
     }
 
     public boolean isReady()

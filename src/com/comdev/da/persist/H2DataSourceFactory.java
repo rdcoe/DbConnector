@@ -52,20 +52,13 @@ public class H2DataSourceFactory extends AbstractDataSourceFactory
     protected void init()
     {
         ds = new JdbcDataSource();
-        ds.setURL( "jdbc:h2:"
-                   + dbDir
-                   + "/"
-                   + getDbName()
-                   + ";IGNORECASE=TRUE" );
+        ds.setURL( "jdbc:h2:" + dbDir + "/" + getDbName() + ";IGNORECASE=TRUE" );
         ds.setUser( user );
         ds.setPassword( passwd );
 
         bind( ds );
 
-        pool = JdbcConnectionPool.create( "jdbc:h2:"
-                                          + dbDir
-                                          + "/"
-                                          + getDbName(), user, passwd );
+        pool = JdbcConnectionPool.create( "jdbc:h2:" + dbDir + "/" + getDbName(), user, passwd );
     }
 
     @Override
@@ -117,9 +110,9 @@ public class H2DataSourceFactory extends AbstractDataSourceFactory
     @Override
     public String testIsDbInitializedSQL()
     {
-        return "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='"
-               + getSchemaName().toUpperCase()
-               + "'";
+        return "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='" +
+               getSchemaName().toUpperCase() +
+               "'";
     }
 
     @Override

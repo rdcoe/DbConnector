@@ -310,7 +310,8 @@
         <delete file="${dist.jar}" />
         <jar destfile="${dist.dir}/${dist.jar}"
              basedir="${build.dir}"
-             compress="true" />
+             compress="true"
+             excludes="junit/**" />
     </target>
 
 </project>

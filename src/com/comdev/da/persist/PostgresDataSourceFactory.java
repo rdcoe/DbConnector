@@ -101,9 +101,7 @@ public class PostgresDataSourceFactory extends AbstractDataSourceFactory
     @Override
     public String testIsDbInitializedSQL()
     {
-        return "SELECT tables.table_name " +
-               "FROM information_schema.tables " +
-               "WHERE tables.table_schema='" +
+        return "SELECT TABLES.TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA='" +
                getSchemaName().toLowerCase() +
                "'";
     }

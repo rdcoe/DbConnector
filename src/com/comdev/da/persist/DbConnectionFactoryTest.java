@@ -207,7 +207,6 @@ public class DbConnectionFactoryTest
                  .andReturn( new StringBuilder() )
                  .times( 1 );
 
-        EasyMock.expect( mockFactory.isDbInitialized() ).andReturn( true );
         EasyMock.expect( mockFactory.isReady() ).andReturn( true );
 
         mockStmt.close();
