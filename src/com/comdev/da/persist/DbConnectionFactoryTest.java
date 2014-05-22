@@ -89,9 +89,13 @@ public class DbConnectionFactoryTest
     {
         DbConnectionFactory mockFactory = PowerMock.createPartialMock( DbConnectionFactory.class,
                                                                        "init",
-                                                                       "getConnection" );
+                                                                       "getConnection",
+                                                                       "isReady" );
         PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
                  .andReturn( mockFactory );
+
+        EasyMock.expect( mockFactory.isReady() ).andReturn( true );
+
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
 
         SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
@@ -181,7 +185,8 @@ public class DbConnectionFactoryTest
                                                                        "init",
                                                                        "getConnection",
                                                                        "isDbInitialized",
-                                                                       "loadSchema" );
+                                                                       "loadSchema",
+                                                                       "isReady" );
         PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
                  .andReturn( mockFactory );
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
@@ -203,6 +208,7 @@ public class DbConnectionFactoryTest
                  .times( 1 );
 
         EasyMock.expect( mockFactory.isDbInitialized() ).andReturn( true );
+        EasyMock.expect( mockFactory.isReady() ).andReturn( true );
 
         mockStmt.close();
         mockCon.close();

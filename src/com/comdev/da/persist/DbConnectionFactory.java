@@ -113,11 +113,62 @@ public class DbConnectionFactory
         factory.setSessionState();
     }
 
+    public boolean executeSQL( final InputStream sqlFileStream )
+        throws DbConnectionFactoryException
+    {
+        if( !isReady() ) {
+            return false;
+        }
+
+        StringBuilder sql = loadSchema( sqlFileStream, schema );
+
+        boolean initialized = false;
+
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+            stmt.execute( sql.toString() );
+            initialized = isDbInitialized();
+        } catch( SQLException e ) {
+            logger.error( e.getMessage(), e );
+            throw new DbConnectionFactoryException( e );
+        } finally {
+            DbUtils.closeQuietly( conn, stmt, null );
+        }
+
+        return initialized;
+    }
+
+    public boolean isReady()
+    {
+        boolean ready = false;
+        if( factory != null ) {
+            ready = factory.isReady();
+        }
+
+        return ready;
+    }
+
+    Connection getConnection()
+        throws DbConnectionFactoryException
+    {
+        Connection conn = null;
+        try {
+            conn = factory.getPooledConnection();
+        } catch( SQLException e ) {
+            throw new DbConnectionFactoryException( e );
+        }
+
+        return conn;
+    }
+
     public boolean isDbInitialized()
         throws DbConnectionFactoryException
     {
-        if( factory == null ) {
-            throw new DbConnectionFactoryException( "Database failed to initialize." );
+        if( !isReady() ) {
+            return false;
         }
 
         boolean initialized = false;
@@ -147,47 +198,6 @@ public class DbConnectionFactory
         return initialized;
     }
 
-    public boolean executeSQL( final InputStream sqlFileStream )
-        throws DbConnectionFactoryException
-    {
-        if( factory == null ) {
-            throw new DbConnectionFactoryException( "Database failed to initialize." );
-        }
-
-        StringBuilder sql = loadSchema( sqlFileStream, schema );
-
-        boolean initialized = false;
-
-        Connection conn = null;
-        Statement stmt = null;
-        try {
-            conn = getConnection();
-            stmt = conn.createStatement();
-            stmt.execute( sql.toString() );
-            initialized = isDbInitialized();
-        } catch( SQLException e ) {
-            logger.error( e.getMessage(), e );
-            throw new DbConnectionFactoryException( e );
-        } finally {
-            DbUtils.closeQuietly( conn, stmt, null );
-        }
-
-        return initialized;
-    }
-
-    Connection getConnection()
-        throws DbConnectionFactoryException
-    {
-        Connection conn = null;
-        try {
-            conn = factory.getPooledConnection();
-        } catch( SQLException e ) {
-            throw new DbConnectionFactoryException( e );
-        }
-
-        return conn;
-    }
-
     public Connection getConnection( Identity identity )
         throws DbConnectionFactoryException
     {
@@ -195,6 +205,26 @@ public class DbConnectionFactory
         monitor.add( identity, conn );
 
         return conn;
+    }
+
+    private StringBuilder loadSchema( final InputStream sqlFileStream, String schemaName )
+        throws DbConnectionFactoryException
+    {
+        StringBuilder sql = new StringBuilder();
+
+        BufferedReader br = new BufferedReader( new InputStreamReader( sqlFileStream ) );
+        String line;
+        try {
+            while( ( line = br.readLine() ) != null ) {
+                sql.append( line.replaceAll( "\\{schema_name\\}", schemaName ) ).append( "\n" );
+            }
+        } catch( IOException e ) {
+            throw new DbConnectionFactoryException( "Failed to load schema initialization file.", e );
+        } finally {
+            IOUtils.closeQuietly( br );
+        }
+
+        return sql;
     }
 
     /**
@@ -238,26 +268,6 @@ public class DbConnectionFactory
         return factory.getDataSource();
     }
 
-    private StringBuilder loadSchema( final InputStream sqlFileStream, String schemaName )
-        throws DbConnectionFactoryException
-    {
-        StringBuilder sql = new StringBuilder();
-
-        BufferedReader br = new BufferedReader( new InputStreamReader( sqlFileStream ) );
-        String line;
-        try {
-            while( ( line = br.readLine() ) != null ) {
-                sql.append( line.replaceAll( "\\{schema_name\\}", schemaName ) ).append( "\n" );
-            }
-        } catch( IOException e ) {
-            throw new DbConnectionFactoryException( "Failed to load schema initialization file.", e );
-        } finally {
-            IOUtils.closeQuietly( br );
-        }
-
-        return sql;
-    }
-
     public synchronized void close()
     {
         String sql = factory.getPreShutdownCommand();
@@ -287,10 +297,5 @@ public class DbConnectionFactory
         factory.close();
 
         logger.info( dbType + " database successfully closed." );
-    }
-
-    public boolean isReady()
-    {
-        return factory.isReady();
     }
 }

@@ -26,10 +26,10 @@
     <import file="${one-jar.dist.dir}/one-jar-ant-task.xml" optional="true" />
 
     <path id="common.classpath">
-        <pathelement location="${lib.dir}/h2/h2-1.3.176.jar" />
         <pathelement location="${lib.dir}/commons/commons-dbutils-1.4.jar" />
         <pathelement location="${lib.dir}/commons/commons-io-2.4.jar" />
         <pathelement location="${lib.dir}/commons/commons-naming-core-20031116.223527.jar" />
+        <pathelement location="${lib.dir}/h2/h2-1.3.167.jar" />
         <pathelement location="${lib.dir}/postgres/postgresql-9.1-901.jdbc4.jar" />
         <pathelement location="${lib.dir}/postgres/tomcat-jdbc.jar" />
         <pathelement location="${lib.dir}/logging/tomcat-juli.jar" />
