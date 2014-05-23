@@ -113,31 +113,27 @@ public class DbConnectionFactory
         factory.setSessionState();
     }
 
-    public boolean executeSQL( final InputStream sqlFileStream )
+    public void executeSQL( final InputStream sqlFileStream )
         throws DbConnectionFactoryException
     {
         if( !isReady() ) {
-            return false;
+            throw new DbConnectionFactoryException( "DbConnectionFactory is not initialized." );
         }
 
         StringBuilder sql = loadSchema( sqlFileStream, schema );
-
-        boolean success = false;
 
         Connection conn = null;
         Statement stmt = null;
         try {
             conn = getConnection();
             stmt = conn.createStatement();
-            success = stmt.execute( sql.toString() );
+            stmt.execute( sql.toString() );
         } catch( SQLException e ) {
             logger.error( e.getMessage(), e );
             throw new DbConnectionFactoryException( e );
         } finally {
             DbUtils.closeQuietly( conn, stmt, null );
         }
-
-        return success;
     }
 
     public boolean isReady()
