@@ -43,9 +43,9 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
         throws SQLException;
 
     protected T selectOne( P[] id )
-    {   
+    {
         formatQuery();
-        
+
         try {
             stmt = registerStatement( id );
             rs = stmt.executeQuery();
@@ -53,8 +53,8 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
             dto = rsh.handle( rs );
         } catch( SQLException e ) {
             log.warn( this.getClass().getCanonicalName()
-                       + " Failed to execute query: "
-                       + e.getMessage() );
+                      + " Failed to execute query: "
+                      + e.getMessage() );
         } finally {
             DbUtils.closeQuietly( stmt );
             DbUtils.closeQuietly( conn );
@@ -65,14 +65,18 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
 
     protected void formatQuery()
     {}
-    
+
     PreparedStatement registerStatement( P[] id )
         throws SQLException
-    {        
-        formatQuery();
-        
+    {
+        return registerStatement( id, true );
+    }
+
+    PreparedStatement registerStatement( P[] id, boolean closeActive )
+        throws SQLException
+    {
         try {
-            conn = factory.getConnection( identity, true );
+            conn = factory.getConnection( identity, closeActive );
             stmt = conn.prepareStatement( query );
 
             if( id != null
@@ -94,6 +98,8 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
     {
         List<T> results = new ArrayList<T>();
 
+        formatQuery();
+
         try {
             stmt = registerStatement( id );
             rs = stmt.executeQuery();
@@ -101,8 +107,8 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
             results = rsh.handle( rs );
         } catch( SQLException e ) {
             log.warn( this.getClass().getCanonicalName()
-                       + " Failed to execute query: "
-                       + e.getMessage() );
+                      + " Failed to execute query: "
+                      + e.getMessage() );
         } finally {
             DbUtils.closeQuietly( stmt );
             DbUtils.closeQuietly( conn );
