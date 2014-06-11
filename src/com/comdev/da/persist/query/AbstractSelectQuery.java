@@ -43,7 +43,9 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
         throws SQLException;
 
     protected T selectOne( P[] id )
-    {
+    {   
+        formatQuery();
+        
         try {
             stmt = registerStatement( id );
             rs = stmt.executeQuery();
@@ -61,9 +63,14 @@ public abstract class AbstractSelectQuery<T, P> extends AbstractQuery implements
         return dto;
     }
 
-    protected PreparedStatement registerStatement( P[] id )
+    protected void formatQuery()
+    {}
+    
+    PreparedStatement registerStatement( P[] id )
         throws SQLException
-    {
+    {        
+        formatQuery();
+        
         try {
             conn = factory.getConnection( identity, true );
             stmt = conn.prepareStatement( query );
