@@ -94,8 +94,6 @@ public class DbConnectionFactoryTest
         PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
                  .andReturn( mockFactory );
 
-        EasyMock.expect( mockFactory.isReady() ).andReturn( true );
-
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
 
         SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );

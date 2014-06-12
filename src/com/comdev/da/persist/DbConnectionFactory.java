@@ -162,10 +162,6 @@ public class DbConnectionFactory
     public boolean isDbInitialized()
         throws DbConnectionFactoryException
     {
-        if( !isReady() ) {
-            return false;
-        }
-
         boolean initialized = false;
 
         Connection conn = null;
