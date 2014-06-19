@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="compile" name="DbConnector">
-    <property name="version" value="1.0.0" />
+    <property name="version" value="1.5.0" />
     <property environment="env" />
     <property name="src.dir" value="src" />
     <property name="integration.tests.dir" value="tests/integration" />
@@ -9,7 +9,7 @@
     <property name="dist.dir" value="dist" />
     <property name="dist.jar" value="dbconnector.jar" />
     <property name="stub.tests.dir" value="tests/stubs" />
-    <property name="junit.output.dir" value="${build.dir}/junit" />
+    <property name="junit.output.dir" value="junit" />
     <property name="instrumented.dir"
               value="${junit.output.dir}/instrumented" />
     <property name="coveragereport.dir" value="${junit.output.dir}/coverage" />
@@ -18,6 +18,9 @@
     <property name="target_ver" value="1.6" />
     <property name="source_ver" value="1.6" />
 
+    <!-- important to keep this name as-is, because the workstation_build.xml uses it -->
+    <property name="comdevlib.dir" value="${lib.dir}/comdev" />
+    
     <!-- default the datasource to use H2 unless an environment variable is set -->
     <property name="env.datasource.arg" value="-d H2" />
 
@@ -26,6 +29,7 @@
     <import file="${one-jar.dist.dir}/one-jar-ant-task.xml" optional="true" />
 
     <path id="common.classpath">
+        <pathelement location="${comdevlib.dir}/dacommon.jar" />
         <pathelement location="${lib.dir}/commons/commons-dbutils-1.4.jar" />
         <pathelement location="${lib.dir}/commons/commons-io-2.4.jar" />
         <pathelement location="${lib.dir}/commons/commons-naming-core-20031116.223527.jar" />
@@ -33,7 +37,6 @@
         <pathelement location="${lib.dir}/postgres/postgresql-9.1-901.jdbc4.jar" />
         <pathelement location="${lib.dir}/postgres/tomcat-jdbc.jar" />
         <pathelement location="${lib.dir}/logging/tomcat-juli.jar" />
-        <pathelement location="${lib.dir}/common/dacommon.jar" />
         <pathelement location="${lib.dir}/logging/slf4j-api-1.6.6.jar" />
     </path>
 
@@ -310,8 +313,7 @@
         <delete file="${dist.jar}" />
         <jar destfile="${dist.dir}/${dist.jar}"
              basedir="${build.dir}"
-             compress="true"
-             excludes="junit/**" />
+             compress="true" />
     </target>
 
 </project>

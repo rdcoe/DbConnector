@@ -1,47 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="prepublish" basedir="." default="import.dists">
-	<property name="common.dir" value="../Common" />
-	<property name="common_dist" value="${common.dir}/dist" />
-	<property name="common_dest" value="./lib/common" />
-	<property name="socket_dist" value="../SocketConnector/dist" />
-	<property name="socket_dest" value="./lib/socketconnector" />
+    <property name="common.dir" value="../Common" />
+    <property name="common_dist" value="${common.dir}/dist" />
 
-	<target name="init">
-		<delete dir="${common_dest}" failonerror="false" />
-		<delete dir="${socket_dest}" failonerror="false" />
-		<mkdir dir="${common_dest}" />
-		<mkdir dir="${socket_dest}" />
-	</target>
+    <target name="clean">
+        <delete dir="${comdevlib.dir}" failonerror="false"/>
+        <mkdir dir="${comdevlib.dir}" />
+    </target>
 
-	<target name="import.dists" depends="init">
-		<echo>importing distributables from dependent project(s)</echo>
-		<copy verbose="true"
-		      todir="${basedir}"
-		      failonerror="true"
-		      flatten="true"
-		      overwrite="true"
-		      file="${common.dir}/version.xml">
-		</copy>
+    <target name="import.dists" depends="clean">
+        <echo>importing distributables from dependent project(s)</echo>
+        <copy verbose="true"
+              todir="${basedir}"
+              failonerror="true"
+              flatten="true"
+              overwrite="true"
+              file="${common.dir}/version.xml">
+        </copy>
 
-		<copy verbose="true"
-		      todir="${common_dest}"
-		      failonerror="true"
-		      flatten="true"
-		      overwrite="true">
-			<fileset dir="${common_dist}">
-				<include name="**/*.jar" />
-			</fileset>
-		</copy>
-
-		<copy verbose="true"
-		      todir="${socket_dest}"
-		      failonerror="true"
-		      flatten="true"
-		      overwrite="true">
-			<fileset dir="${socket_dist}">
-				<include name="**/*.jar" />
-			</fileset>
-		</copy>
-	</target>
+        <copy verbose="true"
+              todir="${comdevlib.dir}"
+              failonerror="true"
+              flatten="true"
+              overwrite="true">
+            <fileset dir="${common_dist}" />
+        </copy>
+    </target>
 </project>

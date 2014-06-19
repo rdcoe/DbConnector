@@ -4,3 +4,4 @@ testDb.trace.db
 bin
 /dist
 /version.xml
+/junit
