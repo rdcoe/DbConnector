@@ -85,7 +85,7 @@ public class DbConnectionFactory
     public static synchronized DbConnectionFactory instance( DbType dbType )
         throws DbConnectionFactoryException
     {
-        return instance( DEFAULT_DBTYPE, DEFAULT_LOGLEVEL );
+        return instance( dbType, DEFAULT_LOGLEVEL );
     }
 
     public static synchronized DbConnectionFactory instance( DbType dbType, String loglevel )

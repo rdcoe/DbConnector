@@ -67,6 +67,7 @@ public class DbConnectionFactoryTest
 
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
         PowerMock.expectLastCall().andThrow( new DbConnectionFactoryException() );
+        mockFactory.initializeLogger( EasyMock.isA( String.class ) );
 
         PowerMock.replayAll();
 
@@ -95,7 +96,7 @@ public class DbConnectionFactoryTest
                  .andReturn( mockFactory );
 
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
+        
         SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
 
         Connection mockCon = PowerMock.createMock( Connection.class );
@@ -188,7 +189,7 @@ public class DbConnectionFactoryTest
         PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
                  .andReturn( mockFactory );
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
+        
         SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
 
         Connection mockCon = PowerMock.createMock( Connection.class );
@@ -288,7 +289,6 @@ public class DbConnectionFactoryTest
         PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
                  .andReturn( mockFactory );
         mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
         SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
         EasyMock.expect( mockSqlFactory.getPreShutdownCommand() ).andReturn( "" );
 
