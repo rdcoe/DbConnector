@@ -20,12 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.comdev.da.auth.Identity;
+import com.comdev.da.common.Log4jConfigLoader;
 
 public class DbConnectionFactory
 {
+    public static final String DEFAULT_LOGLEVEL = "info";
     private static final Logger logger = LoggerFactory.getLogger( DbConnectionFactory.class );
-    public static final DbType DEFAULT_DBTYPE = DbType.H2;
 
+    public static final DbType DEFAULT_DBTYPE = DbType.H2;
+    
     private static Hashtable<DbType, DbConnectionFactory> instanceTable = new Hashtable<DbConnectionFactory.DbType, DbConnectionFactory>();
     private static DbConnectionFactory instance;
 
@@ -82,12 +85,27 @@ public class DbConnectionFactory
     public static synchronized DbConnectionFactory instance( DbType dbType )
         throws DbConnectionFactoryException
     {
+        return instance( DEFAULT_DBTYPE, DEFAULT_LOGLEVEL );
+    }
+
+    public static synchronized DbConnectionFactory instance( DbType dbType, String loglevel )
+        throws DbConnectionFactoryException
+    {
         if( !instanceTable.containsKey( dbType ) ) {
             instance = new DbConnectionFactory( dbType );
             instanceTable.put( dbType, instance );
+
+            instance.initializeLogger( loglevel );
+            new VersionInfo().printVersionInfo();
         }
 
         return instance;
+    }
+
+    void initializeLogger( String loglevel )
+    {
+        Log4jConfigLoader loader = new Log4jConfigLoader( loglevel );
+        loader.initializeLogger( DbConnectionFactory.class.getPackage().getName() );
     }
 
     public void init( String dbName, String schema, String dbUser, String passwd )
@@ -108,7 +126,9 @@ public class DbConnectionFactory
             throw new DbConnectionFactoryException( e );
         }
 
-        logger.info( "Using datasource URL: " + factory.getUrl() + "." );
+        logger.info( "Using datasource URL: "
+                     + factory.getUrl()
+                     + "." );
 
         factory.setSessionState();
     }
@@ -287,6 +307,7 @@ public class DbConnectionFactory
 
         factory.close();
 
-        logger.info( dbType + " database successfully closed." );
+        logger.info( dbType
+                     + " database successfully closed." );
     }
 }
