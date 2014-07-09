@@ -319,4 +319,9 @@ public class DbConnectionFactory
         logger.info( name
                      + " database successfully closed." );
     }
+
+    public DbType getDbType()
+    {
+        return type;
+    }
 }
