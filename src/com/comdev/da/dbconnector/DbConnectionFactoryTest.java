@@ -2,7 +2,6 @@ package com.comdev.da.dbconnector;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -24,22 +23,19 @@ import org.powermock.reflect.Whitebox;
 import com.comdev.da.dbconnector.DbConnectionFactory.DbType;
 
 @RunWith( PowerMockRunner.class )
-@PrepareForTest( {DbConnectionFactory.class} )
+@PrepareForTest( {DbConnectionFactory.class, Class.class} )
 public class DbConnectionFactoryTest
 {
-    private DbConnectionFactory instance;
     private static final String DB_NAME = "testDb";
     private static final String SCHEMA_NAME = "testSchema";
     private static final String DB_USER = "sa";
     private static final String DB_PASSWD = "";
 
-    @SuppressWarnings( {"rawtypes", "unchecked"} )
     @After
     public void tearDown()
         throws Exception
     {
-        Field field = Whitebox.getField( DbConnectionFactory.class, "instanceTable" );
-        Hashtable<DbType, DbConnectionFactory> instanceTable = (Hashtable)field.get( instance );
+        Hashtable<String, DbConnectionFactory> instanceTable = DbConnectionFactory.instanceTable;
         instanceTable.clear();
     }
 
@@ -47,13 +43,11 @@ public class DbConnectionFactoryTest
     public void testGetInstanceReturnsH2Instance()
         throws Exception
     {
-        instance = DbConnectionFactory.instance( DbType.H2 );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+        DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME );
+        instance.init( SCHEMA_NAME, DB_USER, DB_PASSWD );
 
-        Field field = Whitebox.getField( DbConnectionFactory.class, "instanceTable" );
-        @SuppressWarnings( {"unchecked", "rawtypes"} )
-        Hashtable<DbType, DbConnectionFactory> instanceTable = (Hashtable)field.get( instance );
-        DbConnectionFactory expected = instanceTable.get( DbType.H2 );
+        Hashtable<String, DbConnectionFactory> instanceTable = DbConnectionFactory.instanceTable;
+        DbConnectionFactory expected = instanceTable.get( DB_NAME );
 
         Assert.assertSame( expected, instance );
     }
@@ -63,18 +57,19 @@ public class DbConnectionFactoryTest
         throws Exception
     {
         DbConnectionFactory mockFactory = PowerMock.createMockAndExpectNew( DbConnectionFactory.class,
-                                                                            EasyMock.anyObject( DbType.class ) );
-
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-        PowerMock.expectLastCall().andThrow( new DbConnectionFactoryException() );
+                                                                            EasyMock.isA( String.class ),
+                                                                            EasyMock.isA( DbType.class ) );
         mockFactory.initializeLogger( EasyMock.isA( String.class ) );
+
+        mockFactory.init( SCHEMA_NAME, DB_USER, DB_PASSWD );
+        PowerMock.expectLastCall().andThrow( new DbConnectionFactoryException() );
 
         PowerMock.replayAll();
 
         boolean thrown = false;
         try {
-            mockFactory = DbConnectionFactory.instance( DbType.H2 );
-            mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+            DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME );
+            instance.init( SCHEMA_NAME, DB_USER, DB_PASSWD );
         } catch( DbConnectionFactoryException e ) {
             thrown = true;
         }
@@ -85,28 +80,25 @@ public class DbConnectionFactoryTest
     }
 
     @Test
-    public void testIsDbInitializedReturnsTrue()
+    public void testIsDbInitialized()
         throws Exception
     {
-        DbConnectionFactory mockFactory = PowerMock.createPartialMock( DbConnectionFactory.class,
-                                                                       "init",
-                                                                       "getConnection",
-                                                                       "isReady" );
-        PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
-                 .andReturn( mockFactory );
+        DbConnectionFactory instance = PowerMock.createPartialMockAndInvokeDefaultConstructor( DbConnectionFactory.class,
+                                                                                               "getConnection" );
 
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-        
-        SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
+        DatasourceFactory mockSqlFactory = PowerMock.createMock( DatasourceFactory.class );
+        Whitebox.setInternalState( instance, DatasourceFactory.class, mockSqlFactory );
 
         Connection mockCon = PowerMock.createMock( Connection.class );
         Statement mockStmt = PowerMock.createMock( Statement.class );
         ResultSet mockRs = PowerMock.createMock( ResultSet.class );
 
-        EasyMock.expect( mockFactory.getConnection() ).andReturn( mockCon );
+        EasyMock.expect( instance.getConnection() ).andReturn( mockCon );
         EasyMock.expect( mockCon.createStatement() ).andReturn( mockStmt );
         EasyMock.expect( mockStmt.executeQuery( EasyMock.isA( String.class ) ) ).andReturn( mockRs );
         EasyMock.expect( mockSqlFactory.testIsDbInitializedSQL() ).andReturn( "" );
+
+        // test true branch
         EasyMock.expect( mockRs.next() ).andReturn( true );
 
         mockRs.close();
@@ -115,37 +107,47 @@ public class DbConnectionFactoryTest
 
         PowerMock.replayAll();
 
-        instance = DbConnectionFactory.instance( DbType.H2 );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
-        Whitebox.setInternalState( instance, SQLFactory.class, mockSqlFactory );
         boolean isInited = instance.isDbInitialized();
+        Assert.assertTrue( "should be inited.", isInited );
 
         PowerMock.verifyAll();
 
-        Assert.assertTrue( isInited );
+        // test false branch
+        PowerMock.resetAll();
+
+        EasyMock.expect( instance.getConnection() ).andReturn( mockCon );
+        EasyMock.expect( mockCon.createStatement() ).andReturn( mockStmt );
+        EasyMock.expect( mockStmt.executeQuery( EasyMock.isA( String.class ) ) ).andReturn( mockRs );
+        EasyMock.expect( mockSqlFactory.testIsDbInitializedSQL() ).andReturn( "" );
+
+        // test false branch
+        EasyMock.expect( mockRs.next() ).andReturn( false );
+
+        mockRs.close();
+        mockStmt.close();
+        mockCon.close();
+
+        PowerMock.replayAll();
+
+        isInited = instance.isDbInitialized();
+        Assert.assertFalse( "should not be inited.", isInited );
+
+        PowerMock.verifyAll();
     }
 
     @Test
     public void testGetConnection()
         throws Exception
     {
-        DbConnectionFactory mockFactory = PowerMock.createPartialMock( DbConnectionFactory.class,
-                                                                       "init" );
-        PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
-                 .andReturn( mockFactory );
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+        DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME );
 
-        SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
+        DatasourceFactory mockSqlFactory = PowerMock.createMock( DatasourceFactory.class );
         Connection mockCon = PowerMock.createMock( Connection.class );
         EasyMock.expect( mockSqlFactory.getPooledConnection() ).andReturn( mockCon );
 
         PowerMock.replayAll();
 
-        instance = DbConnectionFactory.instance( DbType.H2 );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
-        Whitebox.setInternalState( instance, SQLFactory.class, mockSqlFactory );
+        Whitebox.setInternalState( instance, DatasourceFactory.class, mockSqlFactory );
         instance.getConnection();
 
         PowerMock.verifyAll();
@@ -155,97 +157,73 @@ public class DbConnectionFactoryTest
     public void testGetDataSource()
         throws Exception
     {
-        DbConnectionFactory mockFactory = PowerMock.createPartialMock( DbConnectionFactory.class,
-                                                                       "init" );
-        PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
-                 .andReturn( mockFactory );
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+        DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME );
 
-        SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
+        DatasourceFactory mockSqlFactory = PowerMock.createMock( DatasourceFactory.class );
         DataSource mockDs = PowerMock.createMock( DataSource.class );
         EasyMock.expect( mockSqlFactory.getDataSource() ).andReturn( mockDs );
 
         PowerMock.replayAll();
 
-        instance = DbConnectionFactory.instance( DbType.H2 );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
-        Whitebox.setInternalState( instance, SQLFactory.class, mockSqlFactory );
+        Whitebox.setInternalState( instance, DatasourceFactory.class, mockSqlFactory );
         instance.getDataSource();
 
         PowerMock.verifyAll();
     }
 
     @Test
-    public void testInitializeDatabase()
+    public void testExecuteSQL()
         throws Exception
     {
-        DbConnectionFactory mockFactory = PowerMock.createPartialMock( DbConnectionFactory.class,
-                                                                       "init",
-                                                                       "getConnection",
-                                                                       "isDbInitialized",
-                                                                       "loadSchema",
-                                                                       "isReady" );
-        PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
-                 .andReturn( mockFactory );
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-        
-        SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
+        DbConnectionFactory instance = PowerMock.createPartialMockAndInvokeDefaultConstructor( DbConnectionFactory.class,
+                                                                                               "prepareSQL" );
+        PowerMock.replay( instance );
+        PowerMock.reset( instance );
+
+        DatasourceFactory mockSqlFactory = PowerMock.createMock( DatasourceFactory.class );
+        EasyMock.expect( mockSqlFactory.isReady() ).andReturn( true );
+        EasyMock.expect( mockSqlFactory.getSchemaName() ).andReturn( SCHEMA_NAME );
+
+        StringBuilder sql = new StringBuilder();
+        PowerMock.expectPrivate( instance,
+                                 "prepareSQL",
+                                 EasyMock.isA( InputStream.class ),
+                                 EasyMock.isA( String.class ) ).andStubReturn( sql );
 
         Connection mockCon = PowerMock.createMock( Connection.class );
         Statement mockStmt = PowerMock.createMock( Statement.class );
 
-        EasyMock.expect( mockFactory.getConnection() ).andReturn( mockCon );
+        EasyMock.expect( mockSqlFactory.getPooledConnection() ).andReturn( mockCon );
         EasyMock.expect( mockCon.createStatement() ).andReturn( mockStmt );
         EasyMock.expect( mockStmt.execute( EasyMock.isA( String.class ) ) ).andReturn( true );
-
-        PowerMock.expectPrivate( mockFactory,
-                                 "loadSchema",
-                                 EasyMock.anyObject( InputStream.class ),
-                                 EasyMock.anyObject( String.class ) )
-                 .andReturn( new StringBuilder() )
-                 .times( 1 );
-
-        EasyMock.expect( mockFactory.isReady() ).andReturn( true );
 
         mockStmt.close();
         mockCon.close();
 
         PowerMock.replayAll();
 
-        DbType dbType = DbType.H2;
-        instance = DbConnectionFactory.instance( dbType );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+        Whitebox.setInternalState( instance, DatasourceFactory.class, mockSqlFactory );
 
-        Whitebox.setInternalState( instance, DbType.class, dbType );
-        Whitebox.setInternalState( instance, SQLFactory.class, mockSqlFactory );
         instance.executeSQL( new BufferedInputStream( null ) );
 
         PowerMock.verifyAll();
     }
 
     @Test
-    public void testLoadSchema()
+    public void testprepareSQL()
         throws Exception
     {
-        DbConnectionFactory mockFactory = PowerMock.createPartialMock( DbConnectionFactory.class,
-                                                                       "init" );
-        PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
-                 .andReturn( mockFactory );
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+        DbConnectionFactory instance = new DbConnectionFactory( DB_NAME, DbType.H2 );
 
-        SQLFactory mockSQLFactory = EasyMock.createMock( SQLFactory.class );
-        Whitebox.setInternalState( mockFactory, SQLFactory.class, mockSQLFactory );
+        DatasourceFactory mockSQLFactory = EasyMock.createMock( DatasourceFactory.class );
+        Whitebox.setInternalState( instance, DatasourceFactory.class, mockSQLFactory );
 
         PowerMock.replayAll();
 
-        DbType dbType = DbType.H2;
-        instance = DbConnectionFactory.instance( dbType );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
+        instance.init( SCHEMA_NAME, DB_USER, DB_PASSWD );
 
         InputStream fis = ClassLoader.getSystemResourceAsStream( "schema_init.sql" );
-        Whitebox.setInternalState( instance, DbType.class, dbType );
-        StringBuilder actual = Whitebox.invokeMethod( instance, "loadSchema", fis, SCHEMA_NAME );
+        StringBuilder actual = Whitebox.invokeMethod( instance, "prepareSQL", fis, SCHEMA_NAME );
 
         PowerMock.verifyAll();
 
@@ -283,19 +261,18 @@ public class DbConnectionFactoryTest
     public void testClose()
         throws Exception
     {
-        DbConnectionFactory mockFactory = PowerMock.createPartialMockAndInvokeDefaultConstructor( DbConnectionFactory.class,
-                                                                                                  "init",
-                                                                                                  "getConnection" );
-        PowerMock.expectNew( DbConnectionFactory.class, EasyMock.anyObject( DbType.class ) )
-                 .andReturn( mockFactory );
-        mockFactory.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-        SQLFactory mockSqlFactory = PowerMock.createMock( SQLFactory.class );
+        DbConnectionFactory instance = PowerMock.createPartialMockAndInvokeDefaultConstructor( DbConnectionFactory.class,
+                                                                                               "getConnection" );
+        PowerMock.replay( instance );
+        PowerMock.reset( instance );
+
+        DatasourceFactory mockSqlFactory = PowerMock.createMock( DatasourceFactory.class );
         EasyMock.expect( mockSqlFactory.getPreShutdownCommand() ).andReturn( "" );
 
         Connection mockCon = PowerMock.createMock( Connection.class );
         Statement mockStmt = PowerMock.createMock( Statement.class );
 
-        EasyMock.expect( mockFactory.getConnection() ).andReturn( mockCon );
+        EasyMock.expect( instance.getConnection() ).andReturn( mockCon );
         EasyMock.expect( mockCon.createStatement() ).andReturn( mockStmt );
         EasyMock.expect( mockStmt.execute( EasyMock.isA( String.class ) ) ).andReturn( true );
 
@@ -306,12 +283,7 @@ public class DbConnectionFactoryTest
 
         PowerMock.replayAll();
 
-        DbType dbType = DbType.H2;
-        instance = DbConnectionFactory.instance( dbType );
-        instance.init( DB_NAME, SCHEMA_NAME, DB_USER, DB_PASSWD );
-
-        Whitebox.setInternalState( instance, DbType.class, dbType );
-        Whitebox.setInternalState( instance, SQLFactory.class, mockSqlFactory );
+        Whitebox.setInternalState( instance, DatasourceFactory.class, mockSqlFactory );
 
         instance.close();
 

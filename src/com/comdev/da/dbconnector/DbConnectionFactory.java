@@ -25,30 +25,29 @@ import com.comdev.da.common.Log4jConfigLoader;
 public class DbConnectionFactory
 {
     public static final String DEFAULT_LOGLEVEL = "info";
+    public static final DbType DEFAULT_DBTYPE = DbType.H2;
+
     private static final Logger logger = LoggerFactory.getLogger( DbConnectionFactory.class );
 
-    public static final DbType DEFAULT_DBTYPE = DbType.H2;
-    
-    private static Hashtable<DbType, DbConnectionFactory> instanceTable = new Hashtable<DbConnectionFactory.DbType, DbConnectionFactory>();
+    static Hashtable<String, DbConnectionFactory> instanceTable = new Hashtable<String, DbConnectionFactory>();
     private static DbConnectionFactory instance;
 
     private final DbConnectionMonitor monitor;
-    private SQLFactory factory;
-    private String schema;
-
-    public final DbType dbType;
+    private DatasourceFactory factory;
+    private final String name;
+    private final DbType type;
 
     public enum DbType {
         H2( H2DataSourceFactory.class ), PGSQL( PostgresDataSourceFactory.class );
 
-        private final Class<? extends SQLFactory> factory;
+        private final Class<? extends DatasourceFactory> factory;
 
-        private DbType( Class<? extends SQLFactory> type )
+        private DbType( Class<? extends DatasourceFactory> type )
         {
             factory = type;
         }
 
-        public Class<? extends SQLFactory> getFactory()
+        public Class<? extends DatasourceFactory> getFactory()
         {
             return factory;
         }
@@ -59,21 +58,23 @@ public class DbConnectionFactory
         }
     }
 
+    @SuppressWarnings( "unused" )
     private DbConnectionFactory()
     {
-        this( DEFAULT_DBTYPE );
+        this( "strictly_for_testing", DEFAULT_DBTYPE );
     }
 
-    private DbConnectionFactory( DbType type )
+    DbConnectionFactory( String dbName, DbType dbType )
     {
+        name = dbName;
+        type = dbType;
         monitor = new DbConnectionMonitor();
-        dbType = type;
     }
 
     /**
-     * The instance() method returns a fully constructed database factory of the specified type. The
-     * method guarantees that the specified database has been initialised with the correct schema.
-     * The initialisation process does not create the database itself.
+     * The instance() method returns a database factory of the specified type, keyed against the
+     * dbname. The method does not guarantee that the specified database has been initialised with
+     * the correct schema. The initialisation process does not create the database itself.
      * 
      * @param dbType
      *            enum that associates the type with the jdbc driver for the database engine
@@ -82,18 +83,26 @@ public class DbConnectionFactory
      * @return
      * @throws DbConnectionFactoryException
      */
-    public static synchronized DbConnectionFactory instance( DbType dbType )
+    public static synchronized DbConnectionFactory instance( String dbName )
         throws DbConnectionFactoryException
     {
-        return instance( dbType, DEFAULT_LOGLEVEL );
+        return instance( dbName, DEFAULT_DBTYPE, DEFAULT_LOGLEVEL );
     }
 
-    public static synchronized DbConnectionFactory instance( DbType dbType, String loglevel )
+    public static synchronized DbConnectionFactory instance( String dbName, DbType dbType )
         throws DbConnectionFactoryException
     {
-        if( !instanceTable.containsKey( dbType ) ) {
-            instance = new DbConnectionFactory( dbType );
-            instanceTable.put( dbType, instance );
+        return instance( dbName, dbType, DEFAULT_LOGLEVEL );
+    }
+
+    public static synchronized DbConnectionFactory instance( String dbName,
+                                                             DbType dbType,
+                                                             String loglevel )
+        throws DbConnectionFactoryException
+    {
+        if( !instanceTable.containsKey( dbName ) ) {
+            instance = new DbConnectionFactory( dbName, dbType );
+            instanceTable.put( dbName, instance );
 
             instance.initializeLogger( loglevel );
             new VersionInfo().printVersionInfo();
@@ -108,19 +117,18 @@ public class DbConnectionFactory
         loader.initializeLogger( DbConnectionFactory.class.getPackage().getName() );
     }
 
-    public void init( String dbName, String schema, String dbUser, String passwd )
+    public void init( String schema, String dbUser, String passwd )
         throws DbConnectionFactoryException
     {
-        Class<? extends SQLFactory> factoryType = dbType.getFactory();
-        Constructor<? extends SQLFactory> constructor;
+        Class<? extends DatasourceFactory> factoryType = type.getFactory();
+        Constructor<? extends DatasourceFactory> constructor;
         try {
             constructor = factoryType.getDeclaredConstructor( String.class,
                                                               String.class,
                                                               String.class,
                                                               String.class );
 
-            factory = constructor.newInstance( dbName, schema, dbUser, passwd );
-            this.schema = schema;
+            factory = constructor.newInstance( name, schema, dbUser, passwd );
         } catch( Exception e ) {
             logger.error( "Failed to initialize the connection factory:  ", e );
             throw new DbConnectionFactoryException( e );
@@ -140,7 +148,7 @@ public class DbConnectionFactory
             throw new DbConnectionFactoryException( "DbConnectionFactory is not initialized." );
         }
 
-        StringBuilder sql = loadSchema( sqlFileStream, schema );
+        StringBuilder sql = prepareSQL( sqlFileStream, factory.getSchemaName() );
 
         Connection conn = null;
         Statement stmt = null;
@@ -209,16 +217,7 @@ public class DbConnectionFactory
         return initialized;
     }
 
-    public Connection getConnection( Identity identity )
-        throws DbConnectionFactoryException
-    {
-        Connection conn = getConnection();
-        monitor.add( identity, conn );
-
-        return conn;
-    }
-
-    private StringBuilder loadSchema( final InputStream sqlFileStream, String schemaName )
+    private StringBuilder prepareSQL( final InputStream sqlFileStream, String schemaName )
         throws DbConnectionFactoryException
     {
         StringBuilder sql = new StringBuilder();
@@ -230,12 +229,22 @@ public class DbConnectionFactory
                 sql.append( line.replaceAll( "\\{schema_name\\}", schemaName ) ).append( "\n" );
             }
         } catch( IOException e ) {
-            throw new DbConnectionFactoryException( "Failed to load schema initialization file.", e );
+            logger.error( "Failed to prepare SQL statement. {}", e.getMessage() );
+            throw new DbConnectionFactoryException();
         } finally {
             IOUtils.closeQuietly( br );
         }
 
         return sql;
+    }
+
+    public Connection getConnection( Identity identity )
+        throws DbConnectionFactoryException
+    {
+        Connection conn = getConnection();
+        monitor.add( identity, conn );
+
+        return conn;
     }
 
     /**
@@ -263,12 +272,12 @@ public class DbConnectionFactory
     }
 
     /**
-     * The getDataSourceFactory method returns the {@link SQLFactory} used by the
+     * The getDataSourceFactory method returns the {@link DatasourceFactory} used by the
      * {@link DbConnectionFactory}
      * 
      * @return
      */
-    public SQLFactory getDataSourceFactory()
+    public DatasourceFactory getDataSourceFactory()
     {
         return factory;
     }
@@ -306,8 +315,8 @@ public class DbConnectionFactory
         monitor.closeAll();
 
         factory.close();
-
-        logger.info( dbType
+        instanceTable.remove( name );
+        logger.info( name
                      + " database successfully closed." );
     }
 }

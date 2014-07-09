@@ -78,6 +78,7 @@
     <target name="clean">
         <delete dir="${build.dir}" />
         <delete dir="${dist.dir}" />
+        <delete dir="${junit.output.dir}" />
         <delete>
             <fileset dir="." includes="*.db" />
             <fileset dir="." includes="version.xml" />

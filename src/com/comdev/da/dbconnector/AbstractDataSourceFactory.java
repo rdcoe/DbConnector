@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.comdev.da.dbconnector.DbConnectionFactory.DbType;
 
-public abstract class AbstractDataSourceFactory implements SQLFactory
+public abstract class AbstractDataSourceFactory implements DatasourceFactory
 {
     protected Logger logger = LoggerFactory.getLogger( getClass() );
 

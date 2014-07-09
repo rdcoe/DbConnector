@@ -46,8 +46,8 @@ public class InitializeDataSourceTest
         dbuser = "sa";
         dbPasswd = "";
 
-        DbConnectionFactory instance = DbConnectionFactory.instance( DbType.H2 );
-        instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
+        DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME );
+        instance.init( SCHEMA_NAME, dbuser, dbPasswd );
         if( !instance.isDbInitialized() ) {
             InputStream fis = ClassLoader.getSystemResourceAsStream( H2_INIT_SCHEMA_FILE );
             instance.executeSQL( fis );
@@ -83,9 +83,10 @@ public class InitializeDataSourceTest
                 }
             }
         } finally {
-            stmt.execute( "DROP SCHEMA " + SCHEMA_NAME );
+            stmt.execute( "DROP SCHEMA "
+                          + SCHEMA_NAME );
             DbUtils.closeQuietly( conn, stmt, rs );
-            DbConnectionFactory.instance( DbType.H2 ).close();
+            DbConnectionFactory.instance( DB_NAME ).close();
         }
 
         Assert.assertTrue( "Schema not created.", schemaExists );
@@ -98,8 +99,8 @@ public class InitializeDataSourceTest
         dbuser = "postgres";
         dbPasswd = "postgres";
 
-        DbConnectionFactory instance = DbConnectionFactory.instance( DbType.PGSQL );
-        instance.init( DB_NAME, SCHEMA_NAME, dbuser, dbPasswd );
+        DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME, DbType.PGSQL );
+        instance.init( SCHEMA_NAME, dbuser, dbPasswd );
         if( !instance.isDbInitialized() ) {
             InputStream fis = ClassLoader.getSystemResourceAsStream( PGSQL_INIT_SCHEMA_FILE );
             instance.executeSQL( fis );
@@ -135,9 +136,11 @@ public class InitializeDataSourceTest
                 }
             }
         } finally {
-            stmt.execute( "DROP SCHEMA " + SCHEMA_NAME + " CASCADE" );
+            stmt.execute( "DROP SCHEMA "
+                          + SCHEMA_NAME
+                          + " CASCADE" );
             DbUtils.closeQuietly( conn, stmt, rs );
-            DbConnectionFactory.instance( DbType.PGSQL ).close();
+            DbConnectionFactory.instance( DB_NAME ).close();
         }
 
         Assert.assertTrue( "Schema not created.", schemaExists );

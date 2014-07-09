@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 /**
- * A SQLFactory provides expected behaviour that all {@link DataSource} implementations must
+ * A DatasourceFactory provides expected behaviour that all {@link DataSource} implementations must
  * use.
  * 
  * @see H2DataSourceFactory
@@ -15,7 +15,7 @@ import javax.sql.DataSource;
  * @author rcoe
  * 
  */
-public interface SQLFactory
+public interface DatasourceFactory
 {
     public String getUrl();
 
