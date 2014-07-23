@@ -27,7 +27,7 @@ public class DbConnectionFactory
     public static final String DEFAULT_LOGLEVEL = "info";
     public static final DbType DEFAULT_DBTYPE = DbType.H2;
 
-    private static final Logger logger = LoggerFactory.getLogger( DbConnectionFactory.class );
+    private final Logger logger = LoggerFactory.getLogger( DbConnectionFactory.class );
 
     static Hashtable<String, DbConnectionFactory> instanceTable = new Hashtable<String, DbConnectionFactory>();
     private static DbConnectionFactory instance;
