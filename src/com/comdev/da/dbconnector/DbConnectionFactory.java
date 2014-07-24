@@ -86,32 +86,24 @@ public class DbConnectionFactory
     public static synchronized DbConnectionFactory instance( String dbName )
         throws DbConnectionFactoryException
     {
-        return instance( dbName, DEFAULT_DBTYPE, DEFAULT_LOGLEVEL );
-    }
-
-    public static synchronized DbConnectionFactory instance( String dbName, DbType dbType )
-        throws DbConnectionFactoryException
-    {
-        return instance( dbName, dbType, DEFAULT_LOGLEVEL );
+        return instance( dbName, DEFAULT_DBTYPE );
     }
 
     public static synchronized DbConnectionFactory instance( String dbName,
-                                                             DbType dbType,
-                                                             String loglevel )
+                                                             DbType dbType )
         throws DbConnectionFactoryException
     {
         if( !instanceTable.containsKey( dbName ) ) {
             instance = new DbConnectionFactory( dbName, dbType );
             instanceTable.put( dbName, instance );
 
-            instance.initializeLogger( loglevel );
             new VersionInfo().printVersionInfo();
         }
 
         return instance;
     }
 
-    void initializeLogger( String loglevel )
+    public void initializeLogger( String loglevel )
     {
         Log4jConfigLoader loader = new Log4jConfigLoader( loglevel );
         loader.initializeLogger( DbConnectionFactory.class.getPackage().getName() );

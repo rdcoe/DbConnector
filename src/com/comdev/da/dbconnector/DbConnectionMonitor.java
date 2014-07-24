@@ -43,7 +43,7 @@ public class DbConnectionMonitor
         }
         connections.add( connection );
 
-        logger.debug( "{} has {} active connection(s).", new Object[] {identity.getName(),
+        logger.trace( "{} has {} active connection(s).", new Object[] {identity.getName(),
                                                                        count( identity )} );
     }
 
@@ -127,7 +127,7 @@ public class DbConnectionMonitor
 
                         long end = System.currentTimeMillis();
 
-                        logger.debug( "Canceled running statement and closed connection in {} ms.",
+                        logger.trace( "Canceled running statement and closed connection in {} ms.",
                                       ( end - start ) );
                     }
                 } catch( Exception e ) {}

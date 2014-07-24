@@ -23,7 +23,7 @@ import org.powermock.reflect.Whitebox;
 import com.comdev.da.dbconnector.DbConnectionFactory.DbType;
 
 @RunWith( PowerMockRunner.class )
-@PrepareForTest( {DbConnectionFactory.class, Class.class} )
+@PrepareForTest( {DbConnectionFactory.class} )
 public class DbConnectionFactoryTest
 {
     private static final String DB_NAME = "testDb";
@@ -69,6 +69,7 @@ public class DbConnectionFactoryTest
         boolean thrown = false;
         try {
             DbConnectionFactory instance = DbConnectionFactory.instance( DB_NAME );
+            instance.initializeLogger( "info" );
             instance.init( SCHEMA_NAME, DB_USER, DB_PASSWD );
         } catch( DbConnectionFactoryException e ) {
             thrown = true;
