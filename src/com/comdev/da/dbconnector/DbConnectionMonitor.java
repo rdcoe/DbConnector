@@ -58,9 +58,10 @@ public class DbConnectionMonitor
      * connections that are closed are replaced by connection proxies.
      * 
      * @param identity
-     * @return
+     * @return the number of connections that are currently held open by an
+     * {@link Identity}
      */
-    int count( Identity identity )
+    public int count( Identity identity )
     {
         int count = 0;
 
@@ -83,9 +84,9 @@ public class DbConnectionMonitor
     /**
      * The count method will return a count of all active Connections.
      * 
-     * @return
+     * @return a count of all active Connections
      */
-    int count()
+    public int count()
     {
         int count = 0;
 
@@ -104,7 +105,7 @@ public class DbConnectionMonitor
      * 
      * @param identity
      */
-    synchronized void closeConnections( Identity identity )
+    public synchronized void closeConnections( Identity identity )
     {
         if( openConnections.get( identity ) != null ) {
 
@@ -113,7 +114,7 @@ public class DbConnectionMonitor
                 try {
                     Connection conn = it.next();
                     if( !conn.isClosed() ) {
-                        logger.debug( "Closing active connections held for {}.", identity.getName() );
+                        logger.trace( "Closing active connections held for {}.", identity.getName() );
                         long start = System.currentTimeMillis();
 
                         Statement stmt = activeStatements.get( conn );
@@ -135,7 +136,7 @@ public class DbConnectionMonitor
         }
     }
 
-    void closeAll()
+    public void closeAll()
     {
         Set<Identity> identities = openConnections.keySet();
         if( identities != null ) {
