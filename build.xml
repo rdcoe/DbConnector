@@ -37,11 +37,11 @@
         <pathelement location="${lib.dir}/postgres/postgresql-9.1-901.jdbc4.jar" />
         <pathelement location="${lib.dir}/postgres/tomcat-jdbc.jar" />
         <pathelement location="${lib.dir}/logging/tomcat-juli.jar" />
-        <pathelement location="${lib.dir}/logging/slf4j-api-1.6.6.jar" />
+        <pathelement location="${lib.dir}/logging/slf4j-api-1.7.7.jar" />
     </path>
 
     <path id="logging.classpath">
-        <pathelement location="${lib.dir}/logging/slf4j-log4j12-1.6.6.jar" />
+        <pathelement location="${lib.dir}/logging/slf4j-log4j12-1.7.7.jar" />
         <pathelement location="${lib.dir}/logging/log4j-1.2.17.jar" />
     </path>
 
@@ -50,7 +50,7 @@
         <pathelement location="${integration.tests.dir}" />
         <pathelement location="${stub.tests.dir}" />
         <pathelement location="${junit.output.dir}" />
-        <pathelement location="${lib.dir}/logging/slf4j-nop-1.6.6.jar" />
+        <pathelement location="${lib.dir}/logging/slf4j-nop-1.7.7.jar" />
         <pathelement location="${lib.dir}/junit/junit-4.10.jar" />
         <pathelement location="${lib.dir}/powermock-easymock/cglib-nodep-2.2.2.jar" />
         <pathelement location="${lib.dir}/powermock-easymock/easymock-3.1.jar" />
