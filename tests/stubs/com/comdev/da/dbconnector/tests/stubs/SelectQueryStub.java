@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.comdev.da.auth.Identity;
+import com.comdev.da.common.Persistable;
 import com.comdev.da.dbconnector.DbConnectionFactory;
-import com.comdev.da.dbconnector.dto.Persistable;
 import com.comdev.da.dbconnector.query.AbstractSelectQuery;
 
 public class SelectQueryStub extends AbstractSelectQuery<Persistable, String>
@@ -31,13 +31,13 @@ public class SelectQueryStub extends AbstractSelectQuery<Persistable, String>
             private static final long serialVersionUID = 1L;
 
             @Override
-            public long getUid()
+            public long getId()
             {
                 return ++i;
             }
 
             @Override
-            public void setUid( long uid )
+            public void setId( long uid )
             {
 
             }

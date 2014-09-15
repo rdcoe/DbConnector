@@ -16,8 +16,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.comdev.da.auth.Identity;
 import com.comdev.da.auth.IdentityImpl;
+import com.comdev.da.common.Persistable;
 import com.comdev.da.dbconnector.DbConnectionFactory;
-import com.comdev.da.dbconnector.dto.Persistable;
 import com.comdev.da.dbconnector.tests.stubs.SelectQueryStub;
 
 @RunWith( PowerMockRunner.class )
@@ -60,8 +60,8 @@ public class SelectManyResultSetHandlerTest
         PowerMock.verifyAll();
 
         Assert.assertTrue( actual.size() == 2 );
-        Assert.assertTrue( actual.get( 0 ).getUid() == 1 );
-        Assert.assertTrue( actual.get( 1 ).getUid() == 2 );
+        Assert.assertTrue( actual.get( 0 ).getId() == 1 );
+        Assert.assertTrue( actual.get( 1 ).getId() == 2 );
     }
 
     @Test

@@ -15,8 +15,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.comdev.da.auth.Identity;
 import com.comdev.da.auth.IdentityImpl;
+import com.comdev.da.common.Persistable;
 import com.comdev.da.dbconnector.DbConnectionFactory;
-import com.comdev.da.dbconnector.dto.Persistable;
 import com.comdev.da.dbconnector.tests.stubs.SelectQueryStub;
 
 @RunWith( PowerMockRunner.class )
