@@ -5,8 +5,8 @@
     <property name="common_dist" value="${common.dir}/dist" />
 
     <target name="clean">
-        <delete dir="${comdevlib.dir}" failonerror="false"/>
-        <mkdir dir="${comdevlib.dir}" />
+        <delete dir="${rcoelib.dir}" failonerror="false"/>
+        <mkdir dir="${rcoelib.dir}" />
     </target>
 
     <target name="import.dists" depends="clean">
@@ -20,7 +20,7 @@
         </copy>
 
         <copy verbose="true"
-              todir="${comdevlib.dir}"
+              todir="${rcoelib.dir}"
               failonerror="true"
               flatten="true"
               overwrite="true">

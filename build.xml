@@ -19,7 +19,7 @@
     <property name="source_ver" value="1.6" />
 
     <!-- important to keep this name as-is, because the workstation_build.xml uses it -->
-    <property name="comdevlib.dir" value="${lib.dir}/comdev" />
+    <property name="rcoelib.dir" value="${lib.dir}/rcoe" />
     
     <!-- default the datasource to use H2 unless an environment variable is set -->
     <property name="env.datasource.arg" value="-d H2" />
@@ -29,7 +29,7 @@
     <import file="${one-jar.dist.dir}/one-jar-ant-task.xml" optional="true" />
 
     <path id="common.classpath">
-        <pathelement location="${comdevlib.dir}/dacommon.jar" />
+        <pathelement location="${rcoelib.dir}/dacommon.jar" />
         <pathelement location="${lib.dir}/commons/commons-dbutils-1.4.jar" />
         <pathelement location="${lib.dir}/commons/commons-io-2.4.jar" />
         <pathelement location="${lib.dir}/commons/commons-naming-core-20031116.223527.jar" />
