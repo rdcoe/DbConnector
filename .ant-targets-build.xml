@@ -1,0 +1,11 @@
+clean
+cleanall
+compile
+compile.itests
+compile.tests
+coverage
+dist
+generate-version
+init
+integration.tests
+unit.tests
