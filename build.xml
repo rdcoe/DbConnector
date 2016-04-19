@@ -232,7 +232,6 @@
 			<classpath location="${test.dir}" />
 			<classpath refid="common.classpath" />
 			<classpath refid="testing.classpath" />
-			<classpath refid="logging.classpath" />
 
 			<jvmarg value="${jvmdebug1}" />
 			<jvmarg value="${jvmdebug2}" />

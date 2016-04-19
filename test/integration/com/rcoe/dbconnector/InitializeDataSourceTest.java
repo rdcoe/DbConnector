@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class InitializeDataSourceTest
 {
     private static final String SCHEMA_FILE = "schema_init.sql";
     private static final String PGSQL_INIT_SCHEMA_FILE = "pgsql_init.sql";
-    private static final String PGSQL_SCHEMA__INDEX_FILE = "pgsql_indices.sql";
+    private static final String PGSQL_SCHEMA_INDEX_FILE = "pgsql_indices.sql";
     private static final String H2_INIT_SCHEMA_FILE = "h2_init.sql";
     private static final String H2_SCHEMA__INDEX_FILE = "h2_indices.sql";
     private static final String DB_NAME = "testDb";
@@ -29,8 +30,28 @@ public class InitializeDataSourceTest
     private String dbuser = "";
     private String dbPasswd = "";
 
+    private static enum DBTYPE {
+                                H2, PGSQL
+    };
+
+    private static DBTYPE dbUnderTest;
+    {
+        String db = System.getenv( "datasource.arg" );
+        db = ( db == null ? "-d H2" : db );
+        switch( db.toUpperCase() ) {
+        case "-D PGSQL":
+            dbUnderTest = DBTYPE.PGSQL;
+            break;
+        case "-D H2":
+            dbUnderTest = DBTYPE.H2;
+            break;
+        default:
+            dbUnderTest = DBTYPE.H2;
+        }
+    }
+
     private static enum table {
-        RESOURCE_REF, LOOKUP, ACL_ENTRY
+                               RESOURCE_REF, LOOKUP, ACL_ENTRY
     }
 
     @Before
@@ -43,6 +64,7 @@ public class InitializeDataSourceTest
     public void testH2DataSource()
         throws Exception
     {
+        Assume.assumeTrue( dbUnderTest == DBTYPE.H2 );
         dbuser = "sa";
         dbPasswd = "";
 
@@ -83,8 +105,7 @@ public class InitializeDataSourceTest
                 }
             }
         } finally {
-            stmt.execute( "DROP SCHEMA "
-                          + SCHEMA_NAME );
+            stmt.execute( "DROP SCHEMA " + SCHEMA_NAME );
             DbUtils.closeQuietly( conn, stmt, rs );
             DbConnectionFactory.instance( DB_NAME ).close();
         }
@@ -96,6 +117,7 @@ public class InitializeDataSourceTest
     public void testPGSQLDataSource()
         throws Exception
     {
+        Assume.assumeTrue( dbUnderTest == DBTYPE.PGSQL );
         dbuser = "postgres";
         dbPasswd = "postgres";
 
@@ -106,7 +128,7 @@ public class InitializeDataSourceTest
             instance.executeSQL( fis );
             fis = ClassLoader.getSystemResourceAsStream( SCHEMA_FILE );
             instance.executeSQL( fis );
-            fis = ClassLoader.getSystemResourceAsStream( PGSQL_SCHEMA__INDEX_FILE );
+            fis = ClassLoader.getSystemResourceAsStream( PGSQL_SCHEMA_INDEX_FILE );
             instance.executeSQL( fis );
         }
 
@@ -136,9 +158,8 @@ public class InitializeDataSourceTest
                 }
             }
         } finally {
-            stmt.execute( "DROP SCHEMA "
-                          + SCHEMA_NAME
-                          + " CASCADE" );
+            stmt.execute( "DROP SCHEMA " + SCHEMA_NAME +
+                          " CASCADE" );
             DbUtils.closeQuietly( conn, stmt, rs );
             DbConnectionFactory.instance( DB_NAME ).close();
         }
