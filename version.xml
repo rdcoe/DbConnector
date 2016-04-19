@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This build file cannot be run stand-alone, it needs to be run from a master build file,
+        <ant antfile="version.xml">
+            <property name="appName" value="${ant.project.name}" />
+        </ant>
+-->
+<project name="version"
+         basedir="."
+         default="compile"
+         xmlns:if="ant:if"
+         xmlns:unless="ant:unless">
+
+	<property environment="env" />
+
+	<!-- overridable properties in master build.xml file but reasonable defaults that allow building -->
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="build.dir" value="build" />
+	<property name="source_ver" value="1.8" />
+	<property name="target_ver" value="1.8" />
+
+	<!-- from http://mail-archives.apache.org/mod_mbox/ant-user/200408.mbox/%3C879A5AD5DD0ED511891F0003473A9B560E23F414@Z011004%3E -->
+	<scriptdef name="lc" language="javascript">
+		<attribute name="property" />
+		<attribute name="value" />
+        project.setNewProperty(attributes.get("property"), attributes.get("value").toLowerCase());
+    </scriptdef>
+
+	<scriptdef name="uc" language="javascript">
+		<attribute name="property" />
+		<attribute name="value" />
+        project.setNewProperty(attributes.get("property"), attributes.get("value").toUpperCase());
+    </scriptdef>
+
+	<lc property="appname" value="${appName}" />
+
+	<property name="package" value="com.rcoe.${appname}" />
+
+	<property name="target.dir" value="${build.dir}/com/rcoe/${appname}" />
+
+	<target name="init">
+		<mkdir dir="${target.dir}" />
+		<property name="build.props" value="${target.dir}/project.properties" />
+	</target>
+
+    <!-- semantic versioning controlled by this property -->
+    <if>
+        <and>
+            <isset property="env.VERSION" />
+        </and>
+       <then>
+            <property name="version" value="${env.VERSION}" />
+        </then>
+        <else>
+            <property name="version" value="devbuild" />
+        </else>
+    </if>
+
+	<if>
+		<and>
+			<isset property="env.BUILD_NUMBER" />
+		</and>
+		<then>
+			<property name="buildnum" value="${env.BUILD_NUMBER}" />
+			<property name="builder" value="${env.BUILDER}" />
+		</then>
+		<else>
+			<property name="buildnum" value="-" />
+			<property name="builder" value="${user.name}" />
+		</else>
+	</if>
+
+	<target name="clean">
+		<delete includesfile="${build.props}" />
+	</target>
+
+	<target name="buildinfo" depends="init">
+		<tstamp>
+			<format property="builtat"
+			        pattern="MM/dd/yyyy HH:mm Z"
+			        timezone="America/Toronto" />
+		</tstamp>
+
+		<!-- create a property file in the project's namespace -->
+		<propertyfile file="${build.props}">
+			<entry key="appname" value="${appName}" />
+			<entry key="version" value="${version}" />
+			<entry key="buildnum" value="${buildnum}" />
+			<entry key="buildtime" value="${builtat}" />
+			<entry key="system" value="${os.arch}/${os.name}/${os.version}" />
+			<entry key="builder" value="${builder}" />
+		</propertyfile>
+
+		<echo message="project: ${appName}" />
+		<echo message="version: ${version}" />
+		<echo message="buildnum: ${buildnum}" />
+		<echo message="built at: ${builtat}" />
+		<echo message="platform: ${os.arch}/${os.name}/${os.version}" />
+		<echo message="builder: ${builder}" />
+
+	</target>
+
+	<target name="precompile">
+		<available file="${build.dir}" property="clean_source" />
+
+		<fileset if:set="clean_source"
+		         dir="${build.dir}"
+		         casesensitive="true"
+		         id="versioninfo.sources">
+			<include name="**/VersionInfo.java" />
+		</fileset>
+
+		<echo if:set="clean_source"
+		      message="deleting ${toString:versioninfo.sources}" />
+		<delete if:set="clean_source"
+		        failonerror="false"
+		        includeemptydirs="true">
+			<fileset refid="versioninfo.sources" />
+		</delete>
+	</target>
+
+	<target name="compile" depends="precompile,buildinfo">
+		<javac srcdir="${src.dir}"
+		       debug="true"
+		       debuglevel="${debuglevel}"
+		       destdir="${build.dir}"
+		       source="${source_ver}"
+		       target="${target_ver}"
+		       includeantruntime="true">
+			<include name="**/VersionInfoGenerator.java" />
+			<classpath refid="common.classpath" />
+		</javac>
+
+		<java classname="com.rcoe.${appname}.common.VersionInfoGenerator">
+			<classpath path="${build.dir}" />
+			<classpath refid="common.classpath" />
+			<arg value="propsfile=${build.props} versionfile=${src.dir}/com/rcoe/${appname}/VersionInfo.java" />
+		</java>
+
+		<replaceregexp file="${target.dir}/VersionInfo.java"
+		               match="package com.rcoe.${appname}.common;"
+		               replace="package ${package};" />
+
+		<javac srcdir="${build.dir}"
+		       debug="true"
+		       debuglevel="${debuglevel}"
+		       destdir="${build.dir}"
+		       source="${source_ver}"
+		       target="${target_ver}"
+		       includeantruntime="true">
+			<include name="**/VersionInfo.java" />
+			<classpath refid="common.classpath" />
+		</javac>
+
+		<delete>
+			<fileset dir="${build.dir}">
+				<include name="**/VersionInfo.java" />
+			</fileset>
+		</delete>
+	</target>
+
+</project>
