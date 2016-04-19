@@ -141,6 +141,7 @@
 			<src path="${src.dir}" />
 			<exclude name="**/*Test.java" />
 			<classpath refid="common.classpath" />
+			<classpath refid="logging.classpath" />
 		</javac>
 		<copy todir="${build.dir}">
 			<fileset dir="${src.dir}">
@@ -162,6 +163,7 @@
 			<src path="${stub.tests.dir}" />
 			<classpath refid="common.classpath" />
 			<classpath refid="testing.classpath" />
+			<classpath refid="logging.classpath" />
 		</javac>
 	</target>
 
@@ -290,6 +292,7 @@
 			<classpath refid="common.classpath" />
 			<classpath refid="testing.classpath" />
 			<classpath refid="cobertura.classpath" />
+			<classpath refid="logging.classpath" />
 
 			<batchtest todir="${instrumented.dir}">
 				<fileset dir="${src.dir}">
